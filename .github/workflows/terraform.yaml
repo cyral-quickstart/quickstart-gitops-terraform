@@ -43,10 +43,8 @@ jobs:
       # GitHub action workflow, and makes the 'terraform' command available to
       # other steps in the job. The Terraform CLI defaults to the latest stable
       # version of the binary — you can modify the version using the
-      # 'terraform_version' attribute. In addition, this step loads the
-      # TF_API_TOKEN GitHub secret as an environment variable, enabling the
-      # Terraform CLI to authenticate to Terraform Cloud. This step uses
-      # HashiCorp's hashicorp/setup-terraform@v1 action; for more details, see
+      # 'terraform_version' attribute. This step uses HashiCorp's
+      # hashicorp/setup-terraform@v1 action; for more details, see:
       # https://github.com/hashicorp/setup-terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -73,9 +71,7 @@ jobs:
         id: validate
         run: terraform validate -no-color
 
-      # The 'Terraform Plan' step generates a Terraform plan. Since main.tf
-      # configures the Terraform Cloud integration, this step triggers a remote
-      # plan run in the Terraform Cloud. Note that:
+      # The 'Terraform Plan' step generates a Terraform plan. Note that:
       #   * This step only runs on pull requests. The PR generates a plan. When
       #     the PR is merged, that plan will be applied.
       #   * This step will continue even when it errors. This allows the next
@@ -89,11 +85,11 @@ jobs:
       # The 'Update Pull Request' step adds a comment to the pull request with
       # the results of the format, init and plan steps. In addition, it
       # displays the plan output (steps.plan.outputs.stdout). This allows your
-      # team to review the results of the plan directly in the PR instead of
-      # opening Terraform Cloud. This step only runs on pull requests. It uses
-      # GitHub's actions/github-script@v6 action, which makes it easy to write
-      # simple scripts that interact with GitHub's API. For more details on
-      # that action, see: https://github.com/actions/github-script
+      # team to review the results of the plan directly in the PR. This step
+      # also only runs on pull requests. It uses GitHub's
+      # actions/github-script@v6 action, which makes it easy to write simpl
+      # scripts that interact with GitHub's API. For more details on that
+      # action, see: https://github.com/actions/github-script
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         env:
@@ -130,8 +126,8 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      # Terraform Apply applies the configuration. This step will only run when
-      # a commit is pushed to main.
+      # The 'Terraform Apply' step applies the configuration. This step will
+      # only run when a commit is pushed to the 'main' branch.
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve -input=false

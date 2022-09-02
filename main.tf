@@ -5,16 +5,6 @@ terraform {
       version = ">= 2.8.0"
     }
   }
-
-  # We are using Terraform Cloud to manage the Terraform state. Please replace
-  # the organization name with your own Terraform Cloud organization. For more
-  # information, see the "Prerequisites" section of the README.
-  cloud {
-    organization = "REPLACE_ME"
-    workspaces {
-      name = "cyral-quickstart-terraform"
-    }
-  }
 }
 
 variable "cyral_control_plane" {
