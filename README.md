@@ -10,7 +10,7 @@ using Cyral.
 
 ## Workflow
 
-TODO
+![GitOps Workflow using Terraform](./gitops_workflow.svg)
 
 ## Using this Quick Start
 
