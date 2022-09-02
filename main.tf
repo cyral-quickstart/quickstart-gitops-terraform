@@ -5,6 +5,13 @@ terraform {
       version = ">= 2.8.0"
     }
   }
+
+  cloud {
+    organization = "CHANGE ME"
+    workspaces {
+      name = "cyral-quickstart-terraform"
+    }
+  }
 }
 
 variable "cyral_control_plane" {
@@ -22,6 +29,17 @@ variable "cyral_client_secret" {
   description = "Cyral service account client secret"
 }
 
+# The sidecar ID is optional, but recommended. If provided, it must be the ID
+# an actual sidecar in the Control Plane in question, otherwise there will be
+# an error. The data repo created in this configuration will be bound to this
+# sidecar, so it is assumed the sidecar will have the sufficient network
+# connectivity to the underlying database represented by the Cyral data repo.
+variable "cyral_sidecar_id" {
+  type        = string
+  description = "ID of a sidecar to bind data repositories to (optional)"
+  default     = ""
+}
+
 # Configures the Cyral Terraform provider, which is used to created resources
 # within the Cyral Control Plane.
 provider "cyral" {
@@ -34,11 +52,21 @@ provider "cyral" {
 # tracked by Cyral (https://cyral.com/docs/manage-repositories/repo-track).
 # Feel free to modify this to create any real repositories you want to protect
 # with Cyral.
-resource "cyral_repository" "example-pg" {
+resource "cyral_repository" "example_pg" {
   name = "example-pg"
   type = "postgresql"
   host = "postgres.example.com"
   port = 5432
+}
+
+# Binds the PostgreSQL data repository to an existing sidecar, identified by
+# the 'sidecar_id' parameter.
+resource "cyral_repository_binding" "example_pg_repo_binding" {
+  count                         = var.cyral_sidecar_id != "" ? 1 : 0
+  repository_id                 = cyral_repository.example_pg.id
+  listener_port                 = cyral_repository.example_pg.port
+  sidecar_id                    = "<CHANGE ME>"
+  sidecar_as_idp_access_gateway = true
 }
 
 # Creates NAME and DOB data labels. Labels are short names for data
@@ -74,7 +102,7 @@ resource "cyral_datalabel" "DOB" {
 #     - finance.customers.date_of_birth
 #
 resource "cyral_repository_datamap" "example-pg_datamap" {
-  repository_id = cyral_repository.example-pg.id
+  repository_id = cyral_repository.example_pg.id
 
   mapping {
     label      = cyral_datalabel.NAME.name

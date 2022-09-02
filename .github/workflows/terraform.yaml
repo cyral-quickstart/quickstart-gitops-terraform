@@ -90,7 +90,8 @@ jobs:
       # actions/github-script@v6 action, which makes it easy to write simpl
       # scripts that interact with GitHub's API. For more details on that
       # action, see: https://github.com/actions/github-script
-      - uses: actions/github-script@v6
+      - name: Update Pull Request
+        uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         env:
           PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
