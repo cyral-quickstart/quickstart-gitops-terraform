@@ -1,4 +1,4 @@
-# quickstart-terraform
+# quickstart-gitops-terraform
 
 This quick start demonstrates a simple GitOps workflow which can be used to
 configure and manage Cyral using Terraform. The example includes using Terraform

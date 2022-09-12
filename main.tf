@@ -9,7 +9,7 @@ terraform {
   cloud {
     organization = "CHANGE ME"
     workspaces {
-      name = "cyral-quickstart-terraform"
+      name = "cyral-quickstart-gitops-terraform"
     }
   }
 }
