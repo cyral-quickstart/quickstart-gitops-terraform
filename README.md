@@ -1,7 +1,7 @@
 # quickstart-gitops-terraform
 
 This quick start demonstrates a simple GitOps workflow which can be used to
-configure and manage Cyral using Terraform and 
+configure and manage Cyral using Terraform and
 [Cyral's Terraform Provider][cyraltfprov]. The example includes using Terraform
 to:
 
@@ -10,7 +10,7 @@ to:
 * Define a **policy** to enforce access to that sensitive data.
 
 The [Cyral Terraform Provider][cyraltfprov] allows you to define the resources
-and configuration in your Cyral Control Plane as code using the Terraform's 
+and configuration in your Cyral Control Plane as code using the Terraform's
 [configuration language](https://www.terraform.io/language).
 
 Ultimately, this quick start will help you enforce [security as code][1] using
@@ -28,18 +28,34 @@ to build from.
 
 * A functional Cyral deployment. If you don't have one, please
   [register for a free trial](https://cyral.com/register/)!
-* A set of Cyral API Client Credentials (client ID and secret).
+* A set of Cyral API client credentials (client ID and secret).
 
-To use the automated GitOps workflow:
+To generate the API client credentials, go to your Cyral Control Plane and
+navigate to "API Client Credentials" on the left-hand navigation bar. Then click
+the "+" button to create a new set of credentials, and provide a given name and
+set of permissions. For this specific quickstart, the API client used requires
+the following permissions:
 
-* A [Terraform Cloud][tfcloud] account (a free account is fine!).
+* View Datamaps
+* Modify Policies
+* View Sidecars and Repositories
+* Modify Sidecars and Repositories
+
+Once the API client is created, the client ID and secret will be displayed on
+the screen. Save these values because they will be inaccessible from the Control
+Plane later and must be regenerated if lost.
+
+Additionally, the following prerequisites are required to use the example 
+automated GitOps workflow with GitHub Actions and Terraform Cloud:
+
+* A [Terraform Cloud][tfcloud] account (a free account is fine).
     * A [Terraform Cloud API token][tfcloud-token] - generate this in Terraform
       Cloud User Settings. Click on "Create an API token" and generate an API
       token named "GitHub Actions".
 * A GitHub account where you can create a copy of this repository (to interact
   with the automated GitOps workflow).
 
-Optional, but recommended:
+Finally, the following prerequisites are optional, but recommended:
 
 * A Cyral sidecar, deployed and functional.
 * A database which you want to be protected by the sidecar.
