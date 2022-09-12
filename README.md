@@ -1,12 +1,17 @@
 # quickstart-gitops-terraform
 
 This quick start demonstrates a simple GitOps workflow which can be used to
-configure and manage Cyral using Terraform. The example includes using Terraform
+configure and manage Cyral using Terraform and 
+[Cyral's Terraform Provider][cyraltfprov]. The example includes using Terraform
 to:
 
 * Track a **data repository**.
 * Define a **data map** for the repository's sensitive data.
 * Define a **policy** to enforce access to that sensitive data.
+
+The [Cyral Terraform Provider][cyraltfprov] allows you to define the resources
+and configuration in your Cyral Control Plane as code using the Terraform's 
+[configuration language](https://www.terraform.io/language).
 
 Ultimately, this quick start will help you enforce [security as code][1] using
 Cyral and Terraform.
@@ -130,9 +135,9 @@ on how you can use Cyral to protect your data.
 
 ## Additional Links
 
-* https://cyral.com/docs/
-* https://registry.terraform.io/providers/cyralinc/cyral/latest/docs
-* https://learn.hashicorp.com/collections/terraform/automation
+* [Cyral Documentation][cyraldocs]
+* [Cyral Terraform Provider][cyraltfprov]
+* [Automate Terraform (Terraform official documentation)][tf-automation]
 
 [1]: https://cyral.com/white-papers/what-is-security-as-code/
 
@@ -149,3 +154,9 @@ on how you can use Cyral to protect your data.
 [tfcloud]: https://www.terraform.io/cloud-docs
 
 [tfcloud-token]: https://www.terraform.io/cloud-docs/users-teams-organizations/api-tokens
+
+[cyraldocs]: https://cyral.com/docs/
+
+[cyraltfprov]: https://registry.terraform.io/providers/cyralinc/cyral/latest/docs
+
+[tf-automation]: https://learn.hashicorp.com/collections/terraform/automation
