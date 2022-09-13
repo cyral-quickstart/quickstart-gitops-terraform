@@ -1,0 +1,134 @@
+# Defines the name of the Actions workflow.
+name: "Terraform"
+
+# Run the jobs defined in this action on pushes to the 'main' branch and on
+# every pull request.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# The Cyral Control Plane address and service account credentials are
+# configured as repository secrets, and exposed here as environment variables
+# which are used to set Terraform variables (see:
+# https://www.terraform.io/cli/config/environment-variables#tf_var_name).
+# There is an additional secret configured for the repository called
+# TF_API_TOKEN, which is the API token used for Terraform Cloud (but that is
+# not exposed as an environment variable). For more information on secrets, see
+# GitHub's docs:
+# https://docs.github.com/en/actions/security-guides/encrypted-secrets
+env:
+  TF_VAR_cyral_control_plane: ${{ secrets.CYRAL_CONTROL_PLANE }}
+  TF_VAR_cyral_client_id: ${{ secrets.CYRAL_CLIENT_ID }}
+  TF_VAR_cyral_client_secret: ${{ secrets.CYRAL_CLIENT_SECRET }}
+
+# Here we define a single job called 'terraform' with eight steps. These steps
+# define all actions in the workflow. However, this job does not run every step
+# when you trigger the action. Some of these steps only run from pull requests;
+# others only run when you merge a commit to main.
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    steps:
+      # The 'Checkout' step checks out the current configuration. The 'uses'
+      # directive defines the action/Docker image to run that specific step.
+      # The checkout step "uses" GitHub's actions/checkout@v2 action; see
+      # https://github.com/actions/checkout.
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # The 'Setup Terraform' step retrieves the Terraform CLI used in the
+      # GitHub action workflow, and makes the 'terraform' command available to
+      # other steps in the job. The Terraform CLI defaults to the latest stable
+      # version of the binary — you can modify the version using the
+      # 'terraform_version' attribute. This step uses HashiCorp's
+      # hashicorp/setup-terraform@v1 action; for more details, see:
+      # https://github.com/hashicorp/setup-terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      # The 'Terraform Format' step checks whether the configuration has been
+      # properly formatted. If the configuration isn't properly formatted, this
+      # step will produce an error. It enforces Terraform best practices by
+      # preventing your team from merging misformatted configuration to main.
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      # The 'Terraform Init' step initializes the Terraform configuration used
+      # in the GitHub action workflow.
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      # The 'Terraform Validate' step validates the configuration used in the
+      # GitHub action workflow.
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      # The 'Terraform Plan' step generates a Terraform plan. Note that:
+      #   * This step only runs on pull requests. The PR generates a plan. When
+      #     the PR is merged, that plan will be applied.
+      #   * This step will continue even when it errors. This allows the next
+      #     step to display the plan error message even if this step fails.
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+
+      # The 'Update Pull Request' step adds a comment to the pull request with
+      # the results of the format, init and plan steps. In addition, it
+      # displays the plan output (steps.plan.outputs.stdout). This allows your
+      # team to review the results of the plan directly in the PR. This step
+      # also only runs on pull requests. It uses GitHub's
+      # actions/github-script@v6 action, which makes it easy to write simpl
+      # scripts that interact with GitHub's API. For more details on that
+      # action, see: https://github.com/actions/github-script
+      - name: Update Pull Request
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      # The 'Terraform Plan Status' step returns whether a plan was
+      # successfully generated or not. This step highlights whenever a plan
+      # fails because the 'Terraform Plan' step continues on error.
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      # The 'Terraform Apply' step applies the configuration. This step will
+      # only run when a commit is pushed to the 'main' branch.
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false
