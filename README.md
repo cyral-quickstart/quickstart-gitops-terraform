@@ -18,17 +18,24 @@ Cyral and Terraform.
 
 ## Using this Quick Start
 
-This quick start can be copied and used in a standalone GitHub repository to
-take advantage of the automated workflow. Alternatively, if you just want to
-play with the Cyral Terraform provider, or have another CI/CD platform that you
-want to adapt this workflow to, please feel free to use this code as a baseline
-to build from.
+This quickstart demonstrates how to use Terraform alongside a CI/CD platform to
+manage Cyral infrastructure as code. Two CI/CD examples are provided in this
+quickstart: [GitHub Actions](github) and [GitLab CI/CD](gitlab). Note that while
+only these two platforms are demonstrated here, Cyral's GitOps-style workflow
+can be used with _any_ CI/CD automation platform (such as GitHub Actions,
+GitLab CI/CD, BitBucket Pipelines, CircleCI, etc.).
+
+This quick start can be copied and used in a standalone GitHub or GitLab
+repository to take advantage of the automated workflow. Alternatively, if you
+just want to play with the Cyral Terraform provider, or have another CI/CD
+platform that you want to adapt this workflow to, please feel free to use this
+code as a baseline to build from.
 
 ### Prerequisites
 
 * A functional Cyral deployment. If you don't have one, please
   [register for a free trial](https://cyral.com/register/)!
-* A set of Cyral API client credentials (client ID and secret).
+* A set of [Cyral API client credentials (client ID and secret)][apicreds].
 
 To generate the API client credentials, go to your Cyral Control Plane and
 navigate to "API Client Credentials" on the left-hand navigation bar. Then click
@@ -45,51 +52,20 @@ Once the API client is created, the client ID and secret will be displayed on
 the screen. Save these values because they will be inaccessible from the Control
 Plane later and must be regenerated if lost.
 
-Additionally, the following prerequisites are required to use the example 
-automated GitOps workflow with GitHub Actions and Terraform Cloud:
-
-* A [Terraform Cloud][tfcloud] account (a free account is fine).
-    * A [Terraform Cloud API token][tfcloud-token] - generate this in Terraform
-      Cloud User Settings. Click on "Create an API token" and generate an API
-      token named "GitHub Actions".
-* A GitHub account where you can create a copy of this repository (to interact
-  with the automated GitOps workflow).
-
-Finally, the following prerequisites are optional, but recommended:
+The following prerequisites are optional, but recommended:
 
 * A Cyral sidecar, deployed and functional.
 * A database which you want to be protected by the sidecar.
 
-### Using the GitOps Workflow
-
-1. Create a fork of this repository, or copy its contents into a GitHub
-   repository in your GitHub account/organization.
-2. Configure the following repository [secrets][ghsec]:
-    * **CYRAL_CONTROL_PLANE** - the address of your Cyral control plane, in the
-      format `<hostname>:<port>`
-    * **CYRAL_CLIENT_ID** - the Cyral API credentials client ID
-    * **CYRAL_CLIENT_SECRET** - the Cyral API credentials client secret
-    * **TF_API_TOKEN*** - the Terraform Cloud API token, described in the
-      previous section.
-3. Create and checkout a new branch, e.g. `git checkout -B quickstart_changes`
-4. Make the following required change to `main.tf`:
-    * Change the `organization` value in the `cloud` block (around line 10) to
-      your Terraform Cloud organization.
-    * _Optionally_, make any other desired changes, such as providing the
-      host/port of a real data repository you wish to track, or changing the
-      details of the policy included in the configuration.
-5. Create a pull request on your copy of the repository with some changes,
-6. Inspect the output of `terraform plan` in the pull request.
-7. Merge the pull request to the `main` branch to trigger the `terraform apply`
-8. Inspect the Cyral control plane to see that the resources were created by
-   Terraform.
+Finally, both the [GitLab](gitlab) and [GitHub](github) examples have their own
+prerequisites, so please see the `README` for each example for details.
 
 ### Custom Terraform Runner
 
-If you don't want to use the GitHub Actions workflow, feel free to run Terraform
-by hand or in some other task runner / CI/CD engine, (and optionally remove the
-Terraform Cloud configuration if desired). The workflow outlined below should be
-standard enough to run on any CI/CD platform.
+If you don't want to use the GitHub Actions or GitLab CI/CD workflows, feel free
+to run Terraform by hand or in some other task runner / CI/CD engine, (and
+optionally remove the Terraform Cloud configuration if desired). The workflow
+outlined below is standard enough to run on any CI/CD platform.
 
 ## GitOps Workflow
 
@@ -98,14 +74,12 @@ GitOps workflow:
 
 ![GitOps Workflow using Terraform](./gitops_workflow.svg)
 
-The specific workflow automation in this quick start is powered by
-[GitHub Actions][2] (see [terraform.yaml](.github/workflows/terraform.yaml)),
-although the general principles and steps should apply to any CI/CD automation
-platform (GitLab CI/CD, BitBucket Pipelines, CircleCI, etc.).
+The general principles and steps should apply to any CI/CD automation platform
+(GitLab CI/CD, BitBucket Pipelines, CircleCI, etc.).
 
-The workflow starts with a GitHub repository containing some
+The workflow starts with a source code repository containing some
 [Terraform configuration](main.tf) on a single `main` branch. Any changes made
-to the configuration are made on [short lived feature branches][3]. A
+to the configuration are made on [short-lived feature branches][3]. A
 pull-request is created for each feature branch when the change is ready to
 be reviewed. At that point, the workflow runs a formatting and validation
 checks on the configuration, followed by a `terraform plan`. The results of the
@@ -120,20 +94,21 @@ defined in the configuration on the Cyral platform.
 ### Terraform State
 
 Note that the [Terraform State][4] file (`terraform.tfstate`) is generated and
-stored in [Terraform Cloud][tfcloud] in this example, for simplicity. Terraform
-requires the latest version of this state file when executing `terraform plan`
+stored in [Terraform Cloud][tfcloud] in the [GitHub Actions](github) example,
+and on [GitLab's Terraform backend][gltf] for the [GitLab](gitlab) example.
+Terraform requires the latest version of this state file when
+executing `terraform plan`
 and `terraform apply` to ensure accurate results. Each time one of these
-commands are run, Terraform pulls the latest state file from Terraform Cloud and
-uses it to evaluate the work it needs to do.
+commands are run, Terraform pulls the latest state file from the respective
+storage and uses it to evaluate the work it needs to do.
 
-You can remove the Terraform Cloud configuration for this quick start if you do
-not want to use Terraform Cloud. However, we (and HashiCorp themselves) strongly
-recommend using remote state management, as opposed to managing the state as a
-local file. While there is nothing inherently _wrong_ with the local file
-option, in most scenarios you probably don't want to do this and instead opt for
-a [remote state][5] option. This will allow better collaboration between
-developers, as well as more secure storage of any sensitive information
-contained within the state file.
+You can configure the Terraform state storage however you want when using these
+examples. However, we (and HashiCorp themselves) strongly recommend using remote
+state management, as opposed to managing the state as a local file. While there
+is nothing inherently _wrong_ with the local file option, in most scenarios you
+probably don't want to do this and instead opt for a [remote state][5] option.
+This will allow better collaboration between developers, as well as more secure
+storage of any sensitive information contained within the state file.
 
 ## Next Steps
 
@@ -153,6 +128,7 @@ on how you can use Cyral to protect your data.
 
 * [Cyral Documentation][cyraldocs]
 * [Cyral Terraform Provider][cyraltfprov]
+* [Manage Cyral with GitOps][cyralgitops]
 * [Automate Terraform (Terraform official documentation)][tf-automation]
 
 [1]: https://cyral.com/white-papers/what-is-security-as-code/
@@ -165,8 +141,6 @@ on how you can use Cyral to protect your data.
 
 [5]: https://www.terraform.io/language/state/remote
 
-[ghsec]: https://docs.github.com/en/actions/security-guides/encrypted-secrets
-
 [tfcloud]: https://www.terraform.io/cloud-docs
 
 [tfcloud-token]: https://www.terraform.io/cloud-docs/users-teams-organizations/api-tokens
@@ -176,3 +150,9 @@ on how you can use Cyral to protect your data.
 [cyraltfprov]: https://registry.terraform.io/providers/cyralinc/cyral/latest/docs
 
 [tf-automation]: https://learn.hashicorp.com/collections/terraform/automation
+
+[gltf]: https://docs.gitlab.com/ee/user/infrastructure/iac/terraform_state.html
+
+[apicreds]: https://cyral.com/docs/v3.0/api-ref/api-intro
+
+[cyralgitops]: https://cyral.com/docs/v3.0/how-to/gitops

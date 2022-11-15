@@ -1,3 +1,15 @@
+# The Terraform configuration in this file uses the Cyral Terraform provider to
+# define the following Cyral Control Plane infrastructure:
+#
+# * A Cyral data repository.
+# * A few custom data labels to identify sensitive data within the repository.
+# * A data map which maps the repository's sensitive data to the labels.
+# * A policy to enforce access to that sensitive data.
+#
+# Optionally, if a sidecar exists and is provided through the sidecar_id
+# variable, the repository is also bound to the sidecar to facilitate access
+# to it through the sidecar.
+
 terraform {
   required_providers {
     cyral = {
@@ -6,6 +18,9 @@ terraform {
     }
   }
 
+  # NOTE: remove this "cloud" block for the GitLab example!!! It is unnecessary
+  # when taking advantage of GitLab's Terraform integration. For more
+  # information, see: https://docs.gitlab.com/ee/user/infrastructure/iac/
   cloud {
     organization = "CHANGE ME"
     workspaces {
