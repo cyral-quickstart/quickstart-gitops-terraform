@@ -1,0 +1,36 @@
+include:
+  - template: Terraform/Base.gitlab-ci.yml
+
+variables:
+  TF_STATE_NAME: cyral-state
+  TF_CACHE_KEY: cyral-cache
+
+.pipeline-rules: &pipeline-rules
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+stages:
+  - validate
+  - build
+  - deploy
+
+fmt:
+  extends:
+    - .terraform:fmt
+    - .pipeline-rules
+
+validate:
+  extends:
+    - .terraform:validate
+    - .pipeline-rules
+
+build:
+  extends:
+    - .terraform:build
+    - .pipeline-rules
+
+deploy:
+  extends: .terraform:deploy
+  dependencies:
+    - build
